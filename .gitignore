@@ -1,0 +1,48 @@
+# --- MITSU: strategic docs (do NOT publish) ---
+MITSU_BLUEPRINT.md
+
+# --- Secrets (blueprint §18/§21: key never enters version control) ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# --- Testing / tooling caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Downloaded / large model assets (fetched + SHA-256 verified at runtime, per §8 #22) ---
+*.task
+models/
+
+# --- Local data stores (roadmap: per-user layout prefs) ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Logs ---
+*.log
+logs/
+
+# --- IDE / editor ---
+.idea/
+*.swp
+
+# --- OS cruft ---
+Thumbs.db
+Desktop.ini
+.DS_Store
