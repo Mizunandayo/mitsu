@@ -1,0 +1,15 @@
+[gesture]
+movement_gain = 1800.0
+minimum_delta_pixels = 1.0
+
+[gesture.pinch]
+engage_ratio = 0.34
+release_ratio = 0.46
+
+[filter]
+minimum_cutoff_hz = 1.2
+beta = 0.015
+derivative_cutoff_hz = 1.0
+
+[window]
+single_monitor_only = true
