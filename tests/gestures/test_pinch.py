@@ -1,9 +1,7 @@
 from __future__ import annotations
+
 from mitsu.gestures.pinch import HandLandmarks, PinchDetector
 from mitsu.perception.one_euro import Point2D
-
-
-
 
 
 def hand_with_tip_distance(tip_distance: float) -> HandLandmarks:

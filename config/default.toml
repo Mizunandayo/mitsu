@@ -6,10 +6,16 @@ minimum_delta_pixels = 1.0
 engage_ratio = 0.34
 release_ratio = 0.46
 
+[gesture.velocity]
+smoothing_alpha = 0.25
+activation_speed = 0.35
+maximum_gain_multiplier = 2.5
+
 [filter]
 minimum_cutoff_hz = 1.2
 beta = 0.015
 derivative_cutoff_hz = 1.0
 
 [window]
-single_monitor_only = true
+single_monitor_only = false
+require_monitor_consistency = true

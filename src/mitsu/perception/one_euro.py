@@ -1,13 +1,9 @@
 """Speed-adaptive smoothing for normalized hand coordinates."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from math import pi
-
-
-
-
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,8 +84,7 @@ class OneEuroFilter:
         )
 
         dynamic_cutoff = (
-            self._minimum_cutoff_hz
-            + self._beta * self._filtered_derivative.magnitude()
+            self._minimum_cutoff_hz + self._beta * self._filtered_derivative.magnitude()
         )
         position_alpha = self._alpha(dynamic_cutoff, elapsed)
         filtered = self._low_pass(point, self._previous_filtered, position_alpha)

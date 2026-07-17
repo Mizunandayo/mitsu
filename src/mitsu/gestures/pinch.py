@@ -1,11 +1,11 @@
 """Scale-invariant pinch detection with hysteresis."""
 
-
 from __future__ import annotations
+
 from dataclasses import dataclass
 from math import hypot
-from mitsu.perception.one_euro import Point2D
 
+from mitsu.perception.one_euro import Point2D
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,16 +18,12 @@ class HandLandmarks:
     middle_mcp: Point2D
 
 
-
 @dataclass(frozen=True, slots=True)
 class PinchReading:
     """Current pinch decision and its normalized measurement."""
 
     is_pinched: bool
     ratio: float | None
-
-
-
 
 
 class PinchDetector:
@@ -41,20 +37,18 @@ class PinchDetector:
         self._engage_ratio = engage_ratio
         self._release_ratio = release_ratio
         self._is_pinched = False
-    
 
     def reset(self) -> None:
         """Clear the latched pinch state after hand tracking is lost."""
         self._is_pinched = False
 
-            
     def update(self, landmarks: HandLandmarks | None) -> PinchReading:
         """Update the latch from current landmarks."""
-        
+
         if landmarks is None:
             self.reset()
             return PinchReading(is_pinched=False, ratio=None)
-        
+
         palm_span = self._distance(landmarks.wrist, landmarks.middle_mcp)
         if palm_span <= 1e-6:
             self.reset()
@@ -73,5 +67,3 @@ class PinchDetector:
     @staticmethod
     def _distance(first: Point2D, second: Point2D) -> float:
         return hypot(first.x - second.x, first.y - second.y)
-
-        

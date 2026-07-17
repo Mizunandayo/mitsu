@@ -1,36 +1,38 @@
-"""Pure relative-delta coordinate mapping for window movement."""
+"""Pure relative-delta coordinate mapping for virtual-desktop movement."""
 
 from __future__ import annotations
-from dataclasses import dataclass
-from mitsu.perception.one_euro import Point2D
 
+from dataclasses import dataclass
+
+from mitsu.perception.one_euro import Point2D
 
 
 @dataclass(frozen=True, slots=True)
 class ScreenBounds:
-    """Inclusive top-left and exclusive bottom-right screen bounds."""
+    """Inclusive top-left and exclusive bottom-right physical-pixel bounds."""
 
     left: int
     top: int
     right: int
     bottom: int
 
-    
     def __post_init__(self) -> None:
         if self.right <= self.left:
             raise ValueError("right must exceed left")
         if self.bottom <= self.top:
             raise ValueError("bottom must exceed top")
 
-
     @property
     def width(self) -> int:
+        """Return the bounds width in physical pixels."""
+
         return self.right - self.left
-    
+
     @property
     def height(self) -> int:
+        """Return the bounds height in physical pixels."""
+
         return self.bottom - self.top
-    
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,8 +43,44 @@ class WindowPosition:
     y: int
 
 
+
+@dataclass(frozen=True, slots=True)
+class ScreenPoint:
+    """A physical-pixel point in the Windows virtual desktop"""
+
+    x: int
+    y: int
+
+
+
+class HitTestProjector:
+    """Project normalized, mirrored hand coordinates to one monitor.
+    Relative movement controls dragging after grip. This projector is used only
+    to choose the initial window beneath a pinch.
+    """
+
+
+    def __init__(self, target_bounds: ScreenBounds) -> None:
+        self._target_bounds = target_bounds
+
+    def project(self, point: Point2D) -> ScreenPoint:
+        """Return a clamped physical-pixel point on the target monitor."""
+
+        normalized_x = min(max(point.x, 0.0), 1.0)
+        normalized_y = min(max(point.y, 0.0), 1.0)
+
+        return ScreenPoint(
+            x=self._target_bounds.left
+            + round(normalized_x * (self._target_bounds.width - 1)),
+            y=self._target_bounds.top
+            + round(normalized_y * (self._target_bounds.height - 1)),
+        )
+
+
+
+
 class RelativeCoordinateMapper:
-    """Map normalized camera deltas to clamped physical-pixel window deltas."""
+    """Map normalized camera deltas to clamped virtual-desktop positions."""
 
     def __init__(
         self,
@@ -60,6 +98,12 @@ class RelativeCoordinateMapper:
         self._bounds = bounds
         self._previous_hand: Point2D | None = None
 
+    @property
+    def bounds(self) -> ScreenBounds:
+        """Return the active virtual-desktop bounds."""
+
+        return self._bounds
+
     def reset(self) -> None:
         """Forget the prior hand point at the end of a drag."""
 
@@ -76,11 +120,14 @@ class RelativeCoordinateMapper:
         current_position: WindowPosition,
         window_width: int,
         window_height: int,
+        gain_multiplier: float = 1.0,
     ) -> WindowPosition:
         """Return a new clamped top-left position from relative hand motion."""
 
         if window_width <= 0 or window_height <= 0:
             raise ValueError("window dimensions must be positive")
+        if gain_multiplier <= 0.0:
+            raise ValueError("gain_multiplier must be positive")
 
         if self._previous_hand is None:
             self.begin(hand_position)
@@ -89,8 +136,9 @@ class RelativeCoordinateMapper:
         hand_delta = hand_position - self._previous_hand
         self._previous_hand = hand_position
 
-        delta_x = hand_delta.x * self._movement_gain
-        delta_y = hand_delta.y * self._movement_gain
+        effective_gain = self._movement_gain * gain_multiplier
+        delta_x = hand_delta.x * effective_gain
+        delta_y = hand_delta.y * effective_gain
 
         if abs(delta_x) < self._minimum_delta_pixels:
             delta_x = 0.0

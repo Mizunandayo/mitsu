@@ -1,6 +1,10 @@
-import tomllib
+"""Typed, validated application configuration."""
+
 from __future__ import annotations
+
+import tomllib
 from pathlib import Path
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -19,6 +23,16 @@ class PinchSettings(BaseModel):
         return self
 
 
+class VelocitySettings(BaseModel):
+    """Settings for velocity-sensitive relative movement."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    smoothing_alpha: float = Field(gt=0.0, le=1.0)
+    activation_speed: float = Field(gt=0.0, le=20.0)
+    maximum_gain_multiplier: float = Field(ge=1.0, le=5.0)
+
+
 class GestureSettings(BaseModel):
     """Settings for relative hand-to-window movement."""
 
@@ -27,6 +41,7 @@ class GestureSettings(BaseModel):
     movement_gain: float = Field(gt=0.0, le=10_000.0)
     minimum_delta_pixels: float = Field(ge=0.0, le=100.0)
     pinch: PinchSettings
+    velocity: VelocitySettings
 
 
 class FilterSettings(BaseModel):
@@ -45,10 +60,11 @@ class WindowSettings(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     single_monitor_only: bool
+    require_monitor_consistency: bool
 
 
 class Settings(BaseModel):
-    """Complete Day-1 application settings."""
+    """Complete application settings."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 

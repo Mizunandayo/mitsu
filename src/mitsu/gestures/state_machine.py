@@ -1,12 +1,9 @@
 """Pure gesture state machine for the Day-1 drag interaction."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum, auto
-
-
-
-
 
 
 class GestureState(Enum):
@@ -18,16 +15,12 @@ class GestureState(Enum):
     RELEASING = auto()
 
 
-
-
 class GestureEffect(Enum):
     """Side effects requested from the application composition layer."""
 
     BEGIN_GRIP = auto()
     MOVE_GRIPPED_WINDOW = auto()
     RELEASE_GRIPPED_WINDOW = auto()
-
-
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,8 +32,6 @@ class GestureInput:
     target_available: bool
 
 
-
-
 @dataclass(frozen=True, slots=True)
 class GestureTransition:
     """A deterministic state transition and requested application effects."""
@@ -48,8 +39,6 @@ class GestureTransition:
     previous_state: GestureState
     current_state: GestureState
     effects: tuple[GestureEffect, ...]
-
-
 
 
 class GestureStateMachine:
@@ -75,7 +64,6 @@ class GestureStateMachine:
 
         self._state = GestureState.IDLE
         return GestureTransition(previous_state, self._state, effects)
-    
 
     def step(self, observation: GestureInput) -> GestureTransition:
         """Advance one frame without performing OS operations."""
@@ -86,7 +74,7 @@ class GestureStateMachine:
         if self._state is GestureState.IDLE:
             if observation.hand_present:
                 self._state = GestureState.TRACKING
-        
+
         elif self._state is GestureState.TRACKING:
             if not observation.hand_present:
                 self._state = GestureState.IDLE
@@ -103,9 +91,7 @@ class GestureStateMachine:
 
         elif self._state is GestureState.RELEASING:
             self._state = (
-                GestureState.TRACKING
-                if observation.hand_present
-                else GestureState.IDLE
+                GestureState.TRACKING if observation.hand_present else GestureState.IDLE
             )
 
         return GestureTransition(previous_state, self._state, effects)

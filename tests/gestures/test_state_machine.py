@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 from mitsu.gestures.state_machine import (
     GestureEffect,
     GestureInput,
     GestureState,
     GestureStateMachine,
 )
-
 
 
 def test_hand_appearance_transitions_idle_to_tracking() -> None:
