@@ -11,7 +11,9 @@ from PySide6.QtWidgets import QApplication
 from mitsu.config import load_settings
 from mitsu.control.coordinate_mapper import HitTestProjector, ScreenPoint
 from mitsu.control.drag_runtime import DragRuntime
+from mitsu.control.monitor_layout import Monitor
 from mitsu.control.target_latch import TargetLatch
+from mitsu.control.window_animator import WindowGlide
 from mitsu.control.window_manager import WindowManager
 from mitsu.gestures.pinch import PinchDetector
 from mitsu.gestures.state_machine import (
@@ -19,6 +21,7 @@ from mitsu.gestures.state_machine import (
     GestureInput,
     GestureState,
     GestureStateMachine,
+    GripSource,
 )
 from mitsu.logging_setup import configure_logging
 from mitsu.overlay.debug_overlay import DebugOverlay
@@ -30,6 +33,23 @@ from mitsu.security import enable_per_monitor_dpi_awareness, verify_model_integr
 from mitsu.voice.asr import OpenAITranscriber
 from mitsu.voice.audio_capture import PushToTalkCapture
 from mitsu.voice.service import VoiceService
+from mitsu.voice.types import IntentAction, MonitorDestination
+
+
+def monitor_for_destination(
+    destination: MonitorDestination,
+    monitors: tuple[Monitor, ...],
+) -> Monitor:
+    """Resolve left/right voice destinations against physical monitor positions."""
+
+    if destination is MonitorDestination.LEFT:
+        return min(monitors, key=lambda monitor: monitor.bounds.left)
+
+    return max(monitors, key=lambda monitor: monitor.bounds.right)
+
+
+
+
 
 
 def main() -> int:
@@ -51,6 +71,8 @@ def main() -> int:
         projector = HitTestProjector(runtime.layout.virtual_bounds)
         target_latch = TargetLatch(grace_period_seconds=0.18)
         window_manager = WindowManager()
+        window_glide = WindowGlide()
+        voice_locked_target = None
         voice_capture = PushToTalkCapture(
             sample_rate_hz=settings.voice.sample_rate_hz,
             maximum_duration_seconds=settings.voice.maximum_recording_seconds,
@@ -135,7 +157,7 @@ def main() -> int:
                 )
 
                 for effect in transition.effects:
-                    if effect is GestureEffect.BEGIN_GRIP:
+                    if effect is GestureEffect.BEGIN_HAND_GRIP:
                         assert candidate is not None
                         assert filtered_point is not None
                         prepared_rect = window_manager.prepare_for_drag(
@@ -151,20 +173,43 @@ def main() -> int:
                         )
                         target_latch.clear()
 
+                    elif effect is GestureEffect.BEGIN_VOICE_GRIP:
+                        # The named target is restored before this effect. The
+                        # first visible hand frame anchors it without a jump.
+                        pass
+
                     elif effect is GestureEffect.MOVE_GRIPPED_WINDOW:
                         assert filtered_point is not None
-                        handle = runtime.active_handle
-                        assert handle is not None
 
-                        next_position = runtime.move(
-                            filtered_point,
-                            frame.timestamp_seconds,
-                        )
-                        window_manager.move_window(handle, next_position)
+                        if (
+                            state_machine.grip_source is GripSource.VOICE
+                            and runtime.active_handle is None
+                        ):
+                            assert voice_locked_target is not None
+                            runtime.begin_grip(
+                                handle=voice_locked_target.handle,
+                                position=voice_locked_target.rect.position,
+                                width=voice_locked_target.rect.width,
+                                height=voice_locked_target.rect.height,
+                                hand_position=filtered_point,
+                                timestamp_seconds=frame.timestamp_seconds,
+                            )
+                            voice_status = f"Moving: {voice_locked_target.title}"
+
+                        elif runtime.active_handle is not None:
+                            next_position = runtime.move(
+                                filtered_point,
+                                frame.timestamp_seconds,
+                            )
+                            window_manager.move_window(
+                                runtime.active_handle,
+                                next_position,
+                            )
 
                     elif effect is GestureEffect.RELEASE_GRIPPED_WINDOW:
                         runtime.release()
                         target_latch.clear()
+                        voice_locked_target = None
 
                 if tracked_hand is None:
                     target_latch.clear()
@@ -176,21 +221,62 @@ def main() -> int:
                     elif voice_result.intent is None:
                         voice_status = "Command not recognized"
                     else:
-                        target = window_manager.find_window(
-                            voice_result.intent.app_name
-                        )
-                        if target is None:
-                            voice_status = f"Not found: {voice_result.intent.app_name}"
-                        elif voice_result.intent.destination is not None:
-                            voice_status = "Destination movement is Day 4"
+                        intent = voice_result.intent
+
+                        if (
+                            state_machine.state is GestureState.GRIPPED
+                            or window_glide.is_active
+                        ):
+                            voice_status = "Finish the current move first"
                         else:
-                            try:
-                                restored = window_manager.restore_and_focus(
-                                    target.handle
-                                )
-                                voice_status = f"Showing: {restored.title}"
-                            except RuntimeError:
-                                voice_status = "Target changed before action"
+                            target = window_manager.find_window(intent.app_name)
+
+                            if target is None:
+                                voice_status = f"Not found: {intent.app_name}"
+                            else:
+                                try:
+                                    restored = window_manager.restore_and_focus(
+                                        target.handle
+                                    )
+
+                                    if intent.destination is not None:
+                                        destination_monitor = monitor_for_destination(
+                                            intent.destination,
+                                            runtime.layout.monitors,
+                                        )
+                                        voice_locked_target = restored
+                                        window_glide.start(
+                                            restored.rect,
+                                            destination_monitor.bounds,
+                                            frame.timestamp_seconds,
+                                        )
+                                        voice_status = (
+                                            f"Moving {restored.title} to "
+                                            f"{intent.destination.name.lower()}"
+                                        )
+
+                                    elif intent.action is IntentAction.GRAB:
+                                        voice_locked_target = restored
+                                        state_machine.begin_voice_grip()
+                                        voice_status = f"Locked: {restored.title}"
+
+                                    else:
+                                        voice_status = f"Showing: {restored.title}"
+
+                                except RuntimeError:
+                                    voice_status = "Target changed before action"
+
+                glide_frame = window_glide.update(frame.timestamp_seconds)
+                if glide_frame is not None:
+                    assert voice_locked_target is not None
+                    window_manager.move_window(
+                        voice_locked_target.handle,
+                        glide_frame.position,
+                    )
+
+                    if glide_frame.is_complete:
+                        voice_status = "Move complete"
+                        voice_locked_target = None
 
                 if projected_point is None:
                     live_pointer.hide()
@@ -242,6 +328,8 @@ def main() -> int:
             voice_capture.close()
         if "voice_service" in locals():
             voice_service.close()
+        if "window_glide" in locals():
+            window_glide.stop()
         cv2.destroyAllWindows()
 
     return 0
