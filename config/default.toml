@@ -19,3 +19,10 @@ derivative_cutoff_hz = 1.0
 [window]
 single_monitor_only = false
 require_monitor_consistency = true
+
+[voice]
+sample_rate_hz = 16000
+maximum_recording_seconds = 6.0
+language = "en"
+transcription_model = "gpt-4o-mini-transcribe"
+transcription_prompt = "MITSU desktop window commands. App names may include Discord, Chrome, VS Code, Visual Studio Code, and Terminal."

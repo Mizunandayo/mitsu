@@ -30,6 +30,7 @@ class DebugOverlay:
         active_handle: int | None,
         hover_title: str | None,
         projected_point: ScreenPoint | None,
+        voice_status: str,
     ) -> np.ndarray:
         """Return a landmark and state annotated BGR frame."""
 
@@ -50,7 +51,7 @@ class DebugOverlay:
         image = Image.fromarray(rgb)
         draw = ImageDraw.Draw(image)
 
-        draw.rectangle((12, 12, 510, 132), fill=(16, 18, 22))
+        draw.rectangle((12, 12, 510, 158), fill=(16, 18, 22))
         draw.text(
             (24, 23),
             f"State: {state.name}",
@@ -81,6 +82,12 @@ class DebugOverlay:
             f"Screen point: {point_text}",
             font=self._font,
             fill=(0, 220, 180) if hover_title is not None else (248, 248, 242),
+        )
+        draw.text(
+            (24, 127),
+            f"Voice: {voice_status[:46]}",
+            font=self._font,
+            fill=(248, 248, 242),
         )
 
         return cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)

@@ -24,7 +24,7 @@ class PinchSettings(BaseModel):
 
 
 class VelocitySettings(BaseModel):
-    """Settings for velocity-sensitive relative movement."""
+    """Velocity-sensitive movement settings."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -34,7 +34,7 @@ class VelocitySettings(BaseModel):
 
 
 class GestureSettings(BaseModel):
-    """Settings for relative hand-to-window movement."""
+    """Hand gesture settings."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -45,7 +45,7 @@ class GestureSettings(BaseModel):
 
 
 class FilterSettings(BaseModel):
-    """One Euro Filter parameters."""
+    """One Euro Filter settings."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -55,7 +55,7 @@ class FilterSettings(BaseModel):
 
 
 class WindowSettings(BaseModel):
-    """Window-control scope restrictions."""
+    """Window-control safety settings."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -63,19 +63,31 @@ class WindowSettings(BaseModel):
     require_monitor_consistency: bool
 
 
+class VoiceSettings(BaseModel):
+    """Explicit cloud transcription settings."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    sample_rate_hz: int = Field(ge=8_000, le=48_000)
+    maximum_recording_seconds: float = Field(gt=0.5, le=10.0)
+    language: str = Field(pattern=r"^[a-z]{2}$")
+    transcription_model: str = Field(min_length=1, max_length=100)
+    transcription_prompt: str = Field(min_length=1, max_length=500)
+
+
 class Settings(BaseModel):
-    """Complete application settings."""
+    """Complete MITSU settings."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     gesture: GestureSettings
     filter: FilterSettings
     window: WindowSettings
+    voice: VoiceSettings
 
 
 def load_settings(path: Path) -> Settings:
     """Load and validate a TOML configuration file."""
 
     with path.open("rb") as config_file:
-        raw_config = tomllib.load(config_file)
-    return Settings.model_validate(raw_config)
+        return Settings.model_validate(tomllib.load(config_file))

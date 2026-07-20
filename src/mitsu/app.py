@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import cv2
+from dotenv import load_dotenv
 from PySide6.QtWidgets import QApplication
 
 from mitsu.config import load_settings
@@ -26,12 +27,16 @@ from mitsu.perception.camera import Camera
 from mitsu.perception.hand_tracker import HandTracker
 from mitsu.perception.one_euro import OneEuroFilter
 from mitsu.security import enable_per_monitor_dpi_awareness, verify_model_integrity
+from mitsu.voice.asr import OpenAITranscriber
+from mitsu.voice.audio_capture import PushToTalkCapture
+from mitsu.voice.service import VoiceService
 
 
 def main() -> int:
     """Run the local Day-2 cross-monitor drag loop."""
 
     project_root = Path(__file__).resolve().parents[2]
+    load_dotenv(project_root / ".env")
     logger = configure_logging()
 
     try:
@@ -46,6 +51,18 @@ def main() -> int:
         projector = HitTestProjector(runtime.layout.virtual_bounds)
         target_latch = TargetLatch(grace_period_seconds=0.18)
         window_manager = WindowManager()
+        voice_capture = PushToTalkCapture(
+            sample_rate_hz=settings.voice.sample_rate_hz,
+            maximum_duration_seconds=settings.voice.maximum_recording_seconds,
+        )
+        voice_service = VoiceService(
+            OpenAITranscriber.from_environment(
+                model=settings.voice.transcription_model,
+                language=settings.voice.language,
+                prompt=settings.voice.transcription_prompt,
+            )
+        )
+        voice_status = "Ready"
         state_machine = GestureStateMachine()
         pinch_detector = PinchDetector(
             settings.gesture.pinch.engage_ratio,
@@ -152,6 +169,29 @@ def main() -> int:
                 if tracked_hand is None:
                     target_latch.clear()
 
+                voice_result = voice_service.poll()
+                if voice_result is not None:
+                    if voice_result.error_message is not None:
+                        voice_status = f"Error: {voice_result.error_message}"
+                    elif voice_result.intent is None:
+                        voice_status = "Command not recognized"
+                    else:
+                        target = window_manager.find_window(
+                            voice_result.intent.app_name
+                        )
+                        if target is None:
+                            voice_status = f"Not found: {voice_result.intent.app_name}"
+                        elif voice_result.intent.destination is not None:
+                            voice_status = "Destination movement is Day 4"
+                        else:
+                            try:
+                                restored = window_manager.restore_and_focus(
+                                    target.handle
+                                )
+                                voice_status = f"Showing: {restored.title}"
+                            except RuntimeError:
+                                voice_status = "Target changed before action"
+
                 if projected_point is None:
                     live_pointer.hide()
                 else:
@@ -168,10 +208,25 @@ def main() -> int:
                     runtime.active_handle,
                     None if candidate is None else candidate.title,
                     projected_point,
+                    voice_status,
                 )
                 cv2.imshow("MITSU Debug", rendered)
 
                 key = cv2.waitKey(1) & 0xFF
+                if key == ord("v"):
+                    try:
+                        if voice_capture.is_recording:
+                            clip = voice_capture.stop()
+                            voice_status = (
+                                "Transcribing..."
+                                if voice_service.submit(clip)
+                                else "Command already processing"
+                            )
+                        else:
+                            voice_capture.start()
+                            voice_status = "Recording - press V to send"
+                    except RuntimeError as error:
+                        voice_status = f"Audio error: {type(error).__name__}"
                 if key in (ord("q"), 27):
                     break
 
@@ -183,6 +238,10 @@ def main() -> int:
             runtime.release()
         if "live_pointer" in locals():
             live_pointer.close()
+        if "voice_capture" in locals():
+            voice_capture.close()
+        if "voice_service" in locals():
+            voice_service.close()
         cv2.destroyAllWindows()
 
     return 0

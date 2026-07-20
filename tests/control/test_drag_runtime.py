@@ -89,6 +89,13 @@ def _settings() -> Settings:
                 "single_monitor_only": False,
                 "require_monitor_consistency": True,
             },
+            "voice": {
+                "sample_rate_hz": 16_000,
+                "maximum_recording_seconds": 6.0,
+                "language": "en",
+                "transcription_model": "gpt-4o-mini-transcribe",
+                "transcription_prompt": "MITSU desktop window commands.",
+            },
         }
     )
 
