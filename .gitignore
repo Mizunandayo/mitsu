@@ -1,6 +1,10 @@
 # --- MITSU: strategic docs (do NOT publish) ---
 MITSU_BLUEPRINT.md
 
+# --- Local agent/tooling config (not part of the submission) ---
+skills/
+.agents/
+
 # --- Secrets (blueprint §18/§21: key never enters version control) ---
 .env
 .env.*
