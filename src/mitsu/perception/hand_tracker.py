@@ -24,8 +24,6 @@ class TrackedHand:
     display_points: tuple[Point2D, ...]
 
 
-
-
 class HandTracker:
     """Detect at most one hand from mirrored BGR camera frames."""
 
@@ -39,12 +37,11 @@ class HandTracker:
             min_tracking_confidence=0.6,
         )
         self._landmarker = vision.HandLandmarker.create_from_options(options)
-        
 
     def detect(
-            self,
-            bgr_frame: np.ndarray,
-            timestamp_milliseconds: int,
+        self,
+        bgr_frame: np.ndarray,
+        timestamp_milliseconds: int,
     ) -> TrackedHand | None:
         """Return landmarks for one hand, or None if no hand is detected."""
 
@@ -54,30 +51,33 @@ class HandTracker:
 
         if not result.hand_landmarks:
             return None
-        
+
         landmarks = result.hand_landmarks[0]
         points = tuple(Point2D(point.x, point.y) for point in landmarks)
 
         return TrackedHand(
-            control_point=points[8],  
+            control_point=points[8],
             pinch_landmarks=HandLandmarks(
                 wrist=points[0],
                 thumb_tip=points[4],
                 index_tip=points[8],
                 middle_mcp=points[9],
+                middle_tip=points[12],
+                ring_mcp=points[13],
+                ring_tip=points[16],
+                pinky_mcp=points[17],
+                pinky_tip=points[20],
             ),
             display_points=points,
         )
-    
+
     def close(self) -> None:
         """Release MediaPipe task resources."""
 
         self._landmarker.close()
-    
 
     def __enter__(self) -> HandTracker:
         return self
 
     def __exit__(self, *_: object) -> None:
         self.close()
-        

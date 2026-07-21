@@ -1,6 +1,5 @@
 """Poppins-rendered OpenCV diagnostic overlay."""
 
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -31,6 +30,7 @@ class DebugOverlay:
         hover_title: str | None,
         projected_point: ScreenPoint | None,
         voice_status: str,
+        microphone_status: str,
     ) -> np.ndarray:
         """Return a landmark and state annotated BGR frame."""
 
@@ -51,7 +51,7 @@ class DebugOverlay:
         image = Image.fromarray(rgb)
         draw = ImageDraw.Draw(image)
 
-        draw.rectangle((12, 12, 510, 158), fill=(16, 18, 22))
+        draw.rectangle((12, 12, 510, 184), fill=(16, 18, 22))
         draw.text(
             (24, 23),
             f"State: {state.name}",
@@ -88,6 +88,12 @@ class DebugOverlay:
             f"Voice: {voice_status[:46]}",
             font=self._font,
             fill=(248, 248, 242),
+        )
+        draw.text(
+            (24, 153),
+            f"Mic: {microphone_status[:48]}",
+            font=self._font,
+            fill=(0, 220, 180),
         )
 
         return cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)

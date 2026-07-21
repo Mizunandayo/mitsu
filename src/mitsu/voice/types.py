@@ -16,7 +16,6 @@ class AudioClip:
     sample_rate_hz: int
 
 
-
 class IntentAction(Enum):
     """Day 3 voice actions"""
 
@@ -25,11 +24,12 @@ class IntentAction(Enum):
 
 
 class MonitorDestination(Enum):
-    """Parsed now, executed during Day 4"""
+    """A cardinal direction resolved against current physical monitor bounds."""
 
     LEFT = auto()
     RIGHT = auto()
-
+    UP = auto()
+    DOWN = auto()
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,14 +41,12 @@ class VoiceIntent:
     destination: MonitorDestination | None
 
 
-
 @dataclass(frozen=True, slots=True)
 class Transcription:
     """An OpenAI transcription response."""
 
     text: str
     latency_ms: float
-
 
 
 @dataclass(frozen=True, slots=True)

@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-from pathlib import Path
 import tempfile
-from urllib.request import Request, urlopen
+from http.client import HTTPSConnection
+from pathlib import Path
 
-MODEL_URL = (
-    "https://storage.googleapis.com/mediapipe-models/hand_landmarker/"
-    "hand_landmarker/float16/latest/hand_landmarker.task"
+MODEL_HOST = "storage.googleapis.com"
+MODEL_PATH = (
+    "/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/"
+    "hand_landmarker.task"
 )
 MAX_MODEL_BYTES = 50 * 1024 * 1024
-
-
 
 
 def main() -> int:
@@ -34,43 +33,76 @@ def main() -> int:
     model_path = models_directory / "hand_landmarker.task"
     pin_path = models_directory / "hand_landmarker.task.sha256"
 
-    if model_path.exists() or pin_path.exists():
+    if model_path.exists():
         raise FileExistsError(
-            "Model or hash pin already exists. Refusing to overwrite trust state."
+            "Model already exists. Refusing to overwrite local model state."
         )
 
+    expected_digest = (
+        pin_path.read_text(encoding="ascii").strip().casefold()
+        if pin_path.exists()
+        else None
+    )
+
     models_directory.mkdir(parents=True, exist_ok=True)
-    request = Request(MODEL_URL, headers={"User-Agent": "MITSU/0.1"})
+    temporary_path: Path | None = None
 
-    with urlopen(request, timeout=30) as response:
-        content_length = response.headers.get("Content-Length")
-        if content_length is not None and int(content_length) > MAX_MODEL_BYTES:
-            raise ValueError("Model download exceeds the configured size limit.")
+    try:
+        # HTTPSConnection verifies TLS certificates by default. The host and path
+        # are constants, so this downloader cannot be redirected to an arbitrary URL.
+        with HTTPSConnection(MODEL_HOST, timeout=30) as connection:
+            connection.request("GET", MODEL_PATH, headers={"User-Agent": "MITSU/0.1"})
+            response = connection.getresponse()
 
-        with tempfile.NamedTemporaryFile(
-            mode="wb",
-            delete=False,
-            dir=models_directory,
-        ) as temporary_file:
-            temporary_path = Path(temporary_file.name)
-            digest = hashlib.sha256()
-            total_bytes = 0
+            if response.status != 200:
+                raise RuntimeError(
+                    f"Model download failed with HTTP status {response.status}."
+                )
 
-            while chunk := response.read(1024 * 1024):
-                total_bytes += len(chunk)
-                if total_bytes > MAX_MODEL_BYTES:
-                    temporary_path.unlink(missing_ok=True)
-                    raise ValueError("Model download exceeds the configured size limit.")
+            content_length = response.getheader("Content-Length")
+            if content_length is not None and int(content_length) > MAX_MODEL_BYTES:
+                raise ValueError("Model download exceeds the configured size limit.")
 
-                digest.update(chunk)
-                temporary_file.write(chunk)
+            with tempfile.NamedTemporaryFile(
+                mode="wb",
+                delete=False,
+                dir=models_directory,
+            ) as temporary_file:
+                temporary_path = Path(temporary_file.name)
+                digest = hashlib.sha256()
+                total_bytes = 0
 
-    temporary_path.replace(model_path)
-    pin_path.write_text(f"{digest.hexdigest()}\n", encoding="ascii")
+                while chunk := response.read(1024 * 1024):
+                    total_bytes += len(chunk)
+                    if total_bytes > MAX_MODEL_BYTES:
+                        raise ValueError(
+                            "Model download exceeds the configured size limit."
+                        )
+
+                    digest.update(chunk)
+                    temporary_file.write(chunk)
+
+        actual_digest = digest.hexdigest()
+        if expected_digest is not None and actual_digest.casefold() != expected_digest:
+            raise ValueError(
+                "Downloaded model does not match the committed SHA-256 pin."
+            )
+
+        temporary_path.replace(model_path)
+    except Exception:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+        raise
+
+    if expected_digest is None:
+        pin_path.write_text(f"{actual_digest}\n", encoding="ascii")
 
     print(f"Model saved: {model_path}")
-    print(f"SHA-256 pin saved: {pin_path}")
-    print("Review and commit the .sha256 pin, never the model file.")
+    if expected_digest is None:
+        print(f"SHA-256 pin saved: {pin_path}")
+        print("Review and commit the .sha256 pin, never the model file.")
+    else:
+        print(f"SHA-256 pin verified: {pin_path}")
     return 0
 
 

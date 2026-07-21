@@ -5,11 +5,23 @@ minimum_delta_pixels = 1.0
 [gesture.pinch]
 engage_ratio = 0.34
 release_ratio = 0.46
+release_debounce_frames = 8
 
 [gesture.velocity]
 smoothing_alpha = 0.25
 activation_speed = 0.35
 maximum_gain_multiplier = 2.5
+
+[gesture.fist]
+engage_tip_distance_ratio = 1.10
+release_tip_distance_ratio = 1.35
+release_debounce_frames = 8
+
+[gesture.v_sign]
+extension_ratio = 1.25
+folded_finger_ratio = 1.20
+minimum_finger_gap_ratio = 0.45
+minimum_hold_frames = 4
 
 [filter]
 minimum_cutoff_hz = 1.2
@@ -20,9 +32,58 @@ derivative_cutoff_hz = 1.0
 single_monitor_only = false
 require_monitor_consistency = true
 
+[pointer]
+camera_left = 0.0
+camera_top = 0.0
+camera_right = 1.0
+camera_bottom = 1.0
+
+[click]
+enabled = true
+pointer_extension_ratio = 1.35
+fingers_close_ratio = 0.50
+fingers_release_ratio = 0.65
+# With index and middle fingertips together, lower only those fingertips
+# slightly toward the wrist. Whole-hand movement does not count as a press.
+minimum_press_downward_ratio = 0.02
+minimum_click_pose_frames = 2
+ring_extension_ratio = 1.25
+minimum_forward_pose_frames = 3
+pinky_extension_ratio = 1.25
+minimum_back_pose_frames = 3
+
+[minimize]
+# Open palms only arbitrate other controls. Minimization requires a stable
+# index-middle-ring cluster followed by a deliberate downward stroke.
+enabled = true
+open_palm_extension_ratio = 1.20
+maximize_open_palm_extension_ratio = 1.30
+minimum_open_palm_frames = 3
+triad_close_ratio = 0.70
+triad_extension_ratio = 1.20
+folded_pinky_extension_ratio = 1.20
+minimum_thumb_index_ratio = 0.45
+minimum_pose_frames = 3
+minimum_downward_distance_ratio = 0.14
+downward_velocity_ratio_per_second = 1.1
+
 [voice]
 sample_rate_hz = 16000
 maximum_recording_seconds = 6.0
+# Reject silent/wrong-device clips before they reach the API.
+minimum_signal_rms = 0.003
 language = "en"
 transcription_model = "gpt-4o-mini-transcribe"
 transcription_prompt = "MITSU desktop window commands. App names may include Discord, Chrome, VS Code, Visual Studio Code, and Terminal."
+
+[cloud]
+enabled = false
+model = "gpt-5.6-terra"
+timeout_seconds = 1.5
+failure_threshold = 2
+cooldown_seconds = 30.0
+maximum_tool_rounds = 3
+allow_screen_capture = false
+
+[observability]
+maximum_samples = 300

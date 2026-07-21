@@ -47,6 +47,7 @@ class WindowManager:
 
     def __init__(self) -> None:
         self._own_process_id = os.getpid()
+        self._last_commanded_positions: dict[int, WindowPosition] = {}
 
     def target_at(self, point: ScreenPoint) -> WindowTarget | None:
         """Return the safe top-level target beneath a physical screen point."""
@@ -61,8 +62,19 @@ class WindowManager:
 
         return self._target_from_handle(root_handle)
 
+    def find_window_by_handle(self, handle: int) -> WindowTarget | None:
+        """Return an eligible top-level window; never trust a supplied HWND."""
+
+        if not self._is_eligible(handle):
+            return None
+
+        return self._target_from_handle(handle)
+
     def move_window(self, handle: int, position: WindowPosition) -> None:
         """Move an eligible window while preserving size, z-order, and focus."""
+
+        if self._last_commanded_positions.get(handle) == position:
+            return
 
         if not self._is_eligible(handle):
             raise RuntimeError("Refusing to move an ineligible window")
@@ -74,10 +86,12 @@ class WindowManager:
             | win32con.SWP_NOOWNERZORDER
         )
         win32gui.SetWindowPos(handle, 0, position.x, position.y, 0, 0, flags)
+        self._last_commanded_positions[handle] = position
 
     def prepare_for_drag(self, handle: int) -> WindowRect:
         """Restore a maximized window after an explicit pinch before dragging."""
 
+        self._last_commanded_positions.pop(handle, None)
         if not self._is_eligible(handle):
             raise RuntimeError("Refusing to prepare an ineligible window")
 
@@ -88,6 +102,50 @@ class WindowManager:
             raise RuntimeError("Window closed while preparing for drag")
 
         return self._get_rect(handle)
+
+    def maximize_window(self, handle: int) -> None:
+        """Maximize an eligible window after an explicit hand-release gesture."""
+
+        self._last_commanded_positions.pop(handle, None)
+        if not self._is_eligible(handle):
+            raise RuntimeError("Refusing to maximize an ineligible window")
+
+        win32gui.ShowWindow(handle, win32con.SW_MAXIMIZE)
+
+    def minimize_foreground_window(self) -> WindowTarget | None:
+        """Minimize only the current eligible foreground application window."""
+
+        handle = win32gui.GetForegroundWindow()
+        if not self._is_eligible(handle):
+            return None
+
+        target = self._target_from_handle(handle)
+        self._last_commanded_positions.pop(handle, None)
+        win32gui.ShowWindow(handle, win32con.SW_MINIMIZE)
+        return target
+
+    def minimize_window(self, handle: int) -> WindowTarget:
+        """Minimize one revalidated external target selected by MITSU."""
+
+        self._last_commanded_positions.pop(handle, None)
+        if not self._is_eligible(handle):
+            raise RuntimeError("Refusing to minimize an ineligible window")
+
+        target = self._target_from_handle(handle)
+        win32gui.ShowWindow(handle, win32con.SW_MINIMIZE)
+        return target
+
+    def minimized_windows(self) -> tuple[WindowTarget, ...]:
+        """Return eligible minimized user windows in stable title order."""
+
+        windows: list[WindowTarget] = []
+
+        def collect(handle: int, _context: object) -> None:
+            if self._is_voice_eligible(handle) and win32gui.IsIconic(handle):
+                windows.append(self._target_from_handle(handle))
+
+        win32gui.EnumWindows(collect, None)
+        return tuple(sorted(windows, key=lambda window: window.title.casefold()))
 
     def find_window(self, query: str) -> WindowTarget | None:
         """Resolve an app by title or executable name, foreground match first."""
@@ -121,6 +179,7 @@ class WindowManager:
     def restore_and_focus(self, handle: int) -> WindowTarget:
         """Restore an explicit voice target and bring it to the foreground."""
 
+        self._last_commanded_positions.pop(handle, None)
         if not self._is_voice_eligible(handle):
             raise RuntimeError("Refusing to restore an ineligible window")
 

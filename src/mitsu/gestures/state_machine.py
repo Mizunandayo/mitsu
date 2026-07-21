@@ -137,9 +137,7 @@ class GestureStateMachine:
 
         elif self._state is GestureState.RELEASING:
             self._state = (
-                GestureState.TRACKING
-                if observation.hand_present
-                else GestureState.IDLE
+                GestureState.TRACKING if observation.hand_present else GestureState.IDLE
             )
             self._grip_source = None
             self._voice_has_seen_hand = False

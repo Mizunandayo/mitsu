@@ -1,6 +1,5 @@
 """Mirrored OpenCV camera capture for local hand perception."""
 
-
 from __future__ import annotations
 
 import time
@@ -22,8 +21,24 @@ class CameraFrame:
 class Camera:
     """Own one local webcam capture device."""
 
-    def __init__(self, device_index: int = 0) -> None:
+    def __init__(
+        self,
+        device_index: int = 0,
+        frame_width: int = 640,
+        frame_height: int = 480,
+        target_fps: int = 60,
+    ) -> None:
+        if frame_width <= 0 or frame_height <= 0 or target_fps <= 0:
+            raise ValueError("Camera dimensions and target FPS must be positive")
+
         self._capture = cv2.VideoCapture(device_index, cv2.CAP_DSHOW)
+        self._capture.set(
+            cv2.CAP_PROP_FOURCC,
+            cv2.VideoWriter_fourcc(*"MJPG"),
+        )
+        self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
+        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+        self._capture.set(cv2.CAP_PROP_FPS, target_fps)
         self._capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
         if not self._capture.isOpened():

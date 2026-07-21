@@ -16,6 +16,11 @@ class HandLandmarks:
     thumb_tip: Point2D
     index_tip: Point2D
     middle_mcp: Point2D
+    middle_tip: Point2D | None = None
+    ring_mcp: Point2D | None = None
+    ring_tip: Point2D | None = None
+    pinky_mcp: Point2D | None = None
+    pinky_tip: Point2D | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,18 +34,28 @@ class PinchReading:
 class PinchDetector:
     """Detect a thumb-index pinch using palm-relative hysteresis."""
 
-    def __init__(self, engage_ratio: float, release_ratio: float) -> None:
+    def __init__(
+        self,
+        engage_ratio: float,
+        release_ratio: float,
+        release_debounce_frames: int = 4,
+    ) -> None:
         if not 0.0 < engage_ratio < release_ratio < 1.0:
             raise ValueError(
                 "thresholds must satisfy 0 < engage_ratio < release_ratio < 1"
             )
+        if release_debounce_frames < 2:
+            raise ValueError("release debounce requires at least two frames")
         self._engage_ratio = engage_ratio
         self._release_ratio = release_ratio
+        self._release_debounce_frames = release_debounce_frames
         self._is_pinched = False
+        self._release_frames = 0
 
     def reset(self) -> None:
         """Clear the latched pinch state after hand tracking is lost."""
         self._is_pinched = False
+        self._release_frames = 0
 
     def update(self, landmarks: HandLandmarks | None) -> PinchReading:
         """Update the latch from current landmarks."""
@@ -58,9 +73,14 @@ class PinchDetector:
         ratio = tip_distance / palm_span
 
         if self._is_pinched:
-            self._is_pinched = ratio < self._release_ratio
+            if ratio < self._release_ratio:
+                self._release_frames = 0
+            else:
+                self._release_frames += 1
+                self._is_pinched = self._release_frames < self._release_debounce_frames
         else:
             self._is_pinched = ratio <= self._engage_ratio
+            self._release_frames = 0
 
         return PinchReading(is_pinched=self._is_pinched, ratio=ratio)
 

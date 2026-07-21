@@ -1,6 +1,5 @@
 """Main-loop-owned eased animation for full voice relocation."""
 
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,26 +16,24 @@ class GlideFrame:
     is_complete: bool
 
 
-
-
 class WindowGlide:
     """Animate one window position without threads or blocking sleeps"""
 
     def __init__(self, duration_seconds: float = 0.36) -> None:
         if duration_seconds <= 0.0:
             raise ValueError("duration_seconds must be positive")
-        
+
         self._duration_seconds = duration_seconds
         self._start_time: float | None = None
         self._start_position: WindowPosition | None = None
         self._end_position: WindowPosition | None = None
-    
+
     @property
     def is_active(self) -> bool:
         """Return whether a glide is currently in progress."""
 
         return self._start_time is not None
-    
+
     def start(
         self,
         window_rect: WindowRect,
@@ -62,7 +59,6 @@ class WindowGlide:
             or self._end_position is None
         ):
             return None
-        
 
         progress = min(
             max((timestamp_seconds - self._start_time) / self._duration_seconds, 0.0),
@@ -84,9 +80,9 @@ class WindowGlide:
         is_complete = progress >= 1.0
         if is_complete:
             self.stop()
-        
+
         return GlideFrame(position=position, is_complete=is_complete)
-    
+
     def stop(self) -> None:
         """Cancel or finish the active glide."""
 

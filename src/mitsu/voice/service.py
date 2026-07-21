@@ -12,6 +12,7 @@ from mitsu.voice.types import AudioClip, VoiceResult
 
 class VoiceService:
     """Keep transcription off the camera and gesture loop."""
+
     def __init__(self, transcriber: OpenAITranscriber) -> None:
         self._transcriber = transcriber
         self._executor = ThreadPoolExecutor(

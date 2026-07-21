@@ -43,7 +43,6 @@ class WindowPosition:
     y: int
 
 
-
 @dataclass(frozen=True, slots=True)
 class ScreenPoint:
     """A physical-pixel point in the Windows virtual desktop"""
@@ -52,13 +51,11 @@ class ScreenPoint:
     y: int
 
 
-
 class HitTestProjector:
     """Project normalized, mirrored hand coordinates to one monitor.
     Relative movement controls dragging after grip. This projector is used only
     to choose the initial window beneath a pinch.
     """
-
 
     def __init__(self, target_bounds: ScreenBounds) -> None:
         self._target_bounds = target_bounds
@@ -77,6 +74,57 @@ class HitTestProjector:
         )
 
 
+class CalibratedPointerProjector:
+    """Map a calibrated camera rectangle to one physical monitor's bounds."""
+
+    def __init__(
+        self,
+        target_bounds: ScreenBounds,
+        *,
+        camera_left: float,
+        camera_top: float,
+        camera_right: float,
+        camera_bottom: float,
+    ) -> None:
+        if not 0.0 <= camera_left < camera_right <= 1.0:
+            raise ValueError(
+                "camera horizontal bounds must satisfy 0 <= left < right <= 1"
+            )
+        if not 0.0 <= camera_top < camera_bottom <= 1.0:
+            raise ValueError(
+                "camera vertical bounds must satisfy 0 <= top < bottom <= 1"
+            )
+
+        self._target_bounds = target_bounds
+        self._camera_left = camera_left
+        self._camera_top = camera_top
+        self._camera_right = camera_right
+        self._camera_bottom = camera_bottom
+
+    def project(self, point: Point2D) -> ScreenPoint:
+        """Project, clamp, and scale a camera-space point to the target monitor."""
+
+        normalized_x = (point.x - self._camera_left) / (
+            self._camera_right - self._camera_left
+        )
+        normalized_y = (point.y - self._camera_top) / (
+            self._camera_bottom - self._camera_top
+        )
+        normalized_x = min(max(normalized_x, 0.0), 1.0)
+        normalized_y = min(max(normalized_y, 0.0), 1.0)
+
+        return ScreenPoint(
+            x=min(
+                self._target_bounds.left
+                + int(normalized_x * self._target_bounds.width + 1e-9),
+                self._target_bounds.right - 1,
+            ),
+            y=min(
+                self._target_bounds.top
+                + int(normalized_y * self._target_bounds.height + 1e-9),
+                self._target_bounds.bottom - 1,
+            ),
+        )
 
 
 class RelativeCoordinateMapper:

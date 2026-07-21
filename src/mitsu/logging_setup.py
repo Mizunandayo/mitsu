@@ -1,6 +1,5 @@
 """Application logging with automatic secret redaction."""
 
-
 from __future__ import annotations
 
 import logging
@@ -20,12 +19,10 @@ class SecretRedactionFilter(logging.Filter):
 
         for pattern in self._PATTERNS:
             message = pattern.sub("[REDACTED]", message)
-        
+
         record.msg = message
         record.args = ()
         return True
-    
-
 
 
 def configure_logging() -> logging.Logger:

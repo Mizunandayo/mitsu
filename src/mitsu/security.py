@@ -1,6 +1,5 @@
 """Process security and local model-integrity controls."""
 
-
 from __future__ import annotations
 
 import ctypes
@@ -11,8 +10,6 @@ from pathlib import Path
 
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
-
-
 
 
 def enable_per_monitor_dpi_awareness() -> None:
@@ -34,9 +31,6 @@ def enable_per_monitor_dpi_awareness() -> None:
         )
 
 
-
-
-
 def verify_model_integrity(model_path: Path, pin_path: Path) -> None:
     """Verify the local model against its commited SHA-256 pin."""
 
@@ -51,15 +45,13 @@ def verify_model_integrity(model_path: Path, pin_path: Path) -> None:
     expected_hash = pin_path.read_text(encoding="ascii").strip().lower()
     if not _SHA256_PATTERN.fullmatch(expected_hash):
         raise ValueError(f"Invalid SHA-256 pin format: {pin_path}")
-    
+
     actual_hash = _sha256_file(model_path)
     if not hmac.compare_digest(actual_hash, expected_hash):
         raise RuntimeError(
             "Hand Landmarker model integrity check failed."
             "Delete the model and bootstrap it again from the reviewed source."
         )
-    
-
 
 
 def _sha256_file(path: Path) -> str:
@@ -69,5 +61,4 @@ def _sha256_file(path: Path) -> str:
         while chunk := model_file.read(1024 * 1024):
             digest.update(chunk)
 
-    
     return digest.hexdigest()
