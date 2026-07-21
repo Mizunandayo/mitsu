@@ -22,7 +22,7 @@ def test_projector_clamps_invalid_normalized_coordinates() -> None:
     assert projector.project(Point2D(-2.0, 3.0)) == ScreenPoint(-2560, 1599)
 
 
-def test_calibrated_pointer_maps_camera_region_to_one_monitor() -> None:
+def test_calibrated_pointer_maps_camera_region_to_desktop_bounds() -> None:
     projector = CalibratedPointerProjector(
         ScreenBounds(0, 0, 1920, 1080),
         camera_left=0.2,
@@ -34,3 +34,17 @@ def test_calibrated_pointer_maps_camera_region_to_one_monitor() -> None:
     assert projector.project(Point2D(0.2, 0.1)) == ScreenPoint(0, 0)
     assert projector.project(Point2D(0.8, 0.9)) == ScreenPoint(1919, 1079)
     assert projector.project(Point2D(0.5, 0.5)) == ScreenPoint(960, 540)
+
+
+def test_calibrated_pointer_maps_to_a_mixed_dpi_virtual_desktop() -> None:
+    projector = CalibratedPointerProjector(
+        ScreenBounds(-2560, 0, 1920, 1600),
+        camera_left=0.0,
+        camera_top=0.0,
+        camera_right=1.0,
+        camera_bottom=1.0,
+    )
+
+    assert projector.project(Point2D(0.0, 0.0)) == ScreenPoint(-2560, 0)
+    assert projector.project(Point2D(1.0, 1.0)) == ScreenPoint(1919, 1599)
+    assert projector.project(Point2D(0.5, 0.5)) == ScreenPoint(-320, 800)

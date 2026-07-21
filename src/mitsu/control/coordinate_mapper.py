@@ -75,7 +75,7 @@ class HitTestProjector:
 
 
 class CalibratedPointerProjector:
-    """Map a calibrated camera rectangle to one physical monitor's bounds."""
+    """Map a calibrated camera rectangle to physical desktop bounds."""
 
     def __init__(
         self,

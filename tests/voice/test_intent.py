@@ -31,6 +31,35 @@ def test_parses_show_command_with_vertical_destination() -> None:
     assert intent.destination is MonitorDestination.UP
 
 
+def test_parses_polite_upper_monitor_request() -> None:
+    intent = parse_command("Please show Discord on the upper monitor")
+
+    assert intent is not None
+    assert intent.action is IntentAction.SHOW
+    assert intent.app_name == "Discord"
+    assert intent.destination is MonitorDestination.UP
+
+
+def test_parses_natural_request_prefix_and_monitor_above() -> None:
+    intent = parse_command(
+        "Mitsu, could you please bring up Discord on the monitor above"
+    )
+
+    assert intent is not None
+    assert intent.action is IntentAction.SHOW
+    assert intent.app_name == "Discord"
+    assert intent.destination is MonitorDestination.UP
+
+
+def test_parses_lower_display_and_move_synonym() -> None:
+    intent = parse_command("I want you to send Discord to my bottom display")
+
+    assert intent is not None
+    assert intent.action is IntentAction.GRAB
+    assert intent.app_name == "Discord"
+    assert intent.destination is MonitorDestination.DOWN
+
+
 def test_parses_a_wake_word_and_polite_prefix() -> None:
     intent = parse_command("Hey Mitsu, please show Discord on the left screen")
 

@@ -79,12 +79,12 @@ The application starts a `MITSU Debug` camera window. `Q` or `Esc` exits safely.
 | Move a window | Thumb-index pinch or closed-fist grip, then move your hand |
 | Release | Open your hand |
 | Maximize a held window | Open a wide palm before release |
-| Pointer | Hold index and middle fingertips together |
+| Pointer | Hold index and middle fingertips together; it maps across the detected virtual desktop |
 | Click | Dip both close fingertips slightly toward your wrist |
 | Back / Forward | Pointer pose plus raised pinky / raised ring finger |
 | Minimize | Index-middle-ring pose followed by a downward stroke |
 | Window shelf | Hold a V sign, then point at a minimized-window row and click |
-| Voice | Press `V` to start, speak, then press `V` again to send |
+| Voice | Press `V` to start, speak, then press `V` again to send. Example: `Please show MITSU Messages on the upper monitor.` |
 | Choose microphone | Press `M`, choose an input device, then select **Use microphone** |
 | Emergency stop | `Ctrl` + `Alt` + `Shift` + `M` |
 

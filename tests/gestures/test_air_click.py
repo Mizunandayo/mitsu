@@ -74,6 +74,22 @@ def test_lifting_fingertips_after_a_click_rearms_without_clicking() -> None:
     assert second_click.click_triggered
 
 
+def test_lifting_after_arming_allows_a_small_downward_press() -> None:
+    """A natural pose adjustment must not force an exaggerated click dip."""
+
+    detector = _detector()
+    settled = _landmarks(fingertip_y=1.56)
+    lifted = _landmarks(fingertip_y=1.48)
+    pressed = _landmarks(fingertip_y=1.54)
+
+    detector.update(settled, 1.0)
+    detector.update(settled, 1.1)
+    detector.update(lifted, 1.2)
+    click = detector.update(pressed, 1.3)
+
+    assert click.click_triggered
+
+
 def test_whole_hand_downward_motion_does_not_click() -> None:
     detector = _detector()
     resting = _landmarks(fingertip_y=1.50, wrist_y=0.0)

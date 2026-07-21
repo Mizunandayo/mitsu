@@ -45,7 +45,9 @@ fingers_close_ratio = 0.50
 fingers_release_ratio = 0.65
 # With index and middle fingertips together, lower only those fingertips
 # slightly toward the wrist. Whole-hand movement does not count as a press.
-minimum_press_downward_ratio = 0.02
+# Palm-relative distance. The detector keeps the highest armed fingertip
+# reference, so this is a small intentional fingertip dip, not a whole-arm move.
+minimum_press_downward_ratio = 0.014
 minimum_click_pose_frames = 2
 ring_extension_ratio = 1.25
 minimum_forward_pose_frames = 3

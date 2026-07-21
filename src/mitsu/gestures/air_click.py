@@ -66,6 +66,9 @@ class AirClickDetector:
 
         self._fingers_are_close = False
         self._click_pose_frames = 0
+        # This is the highest (smallest image-Y) point reached by each
+        # fingertip while a click pose is armed. It lets a user settle into the
+        # pose, lift slightly, then make a small deliberate downward press.
         self._press_baseline_heights: tuple[float, float] | None = None
         self._awaiting_press_release = False
         self._back_pose_frames = 0
@@ -160,6 +163,14 @@ class AirClickDetector:
         if press_ratio >= self._minimum_press_downward_ratio:
             self._awaiting_press_release = True
             return True
+
+        # Only an upward fingertip motion may improve the reference point.
+        # A downward motion never moves the goalpost, so a gentle but
+        # intentional dip accumulates from the user's natural resting pose.
+        self._press_baseline_heights = (
+            min(self._press_baseline_heights[0], fingertip_heights[0]),
+            min(self._press_baseline_heights[1], fingertip_heights[1]),
+        )
 
         return False
 

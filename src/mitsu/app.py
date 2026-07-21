@@ -87,9 +87,10 @@ def main() -> int:
         verify_model_integrity(model_path, pin_path)
 
         runtime = DragRuntime.discover(settings)
-        hit_test_projector = HitTestProjector(runtime.layout.primary_monitor.bounds)
+        desktop_bounds = runtime.layout.virtual_bounds
+        hit_test_projector = HitTestProjector(desktop_bounds)
         pointer_projector = CalibratedPointerProjector(
-            runtime.layout.primary_monitor.bounds,
+            desktop_bounds,
             camera_left=settings.pointer.camera_left,
             camera_top=settings.pointer.camera_top,
             camera_right=settings.pointer.camera_right,
