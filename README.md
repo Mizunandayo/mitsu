@@ -125,17 +125,31 @@ microphone selector changes the active input only in memory for the current run.
 
 ## Built With Codex And GPT-5.6
 
-Codex was used throughout the Build Week implementation to accelerate test-first
-development, Windows API integration, MediaPipe plumbing, gesture-state-machine
-coverage, coordinate math, and the final safety/observability pass.
+MITSU was built in Codex during OpenAI Build Week. In everyday terms, Codex was
+the build partner that helped turn a webcam, a hand gesture, and a Windows
+desktop into a reliable interaction: it helped design the gesture rules, connect
+them safely to real windows, and test the awkward cases before a gesture could
+move the wrong thing.
 
-The product decisions remained deliberate: local perception and movement are
-kept off the network; whole-window movement is prioritized over fragile
-tab-level control; and fixed voice grammar remains the reliable path. MITSU also
-contains a GPT-5.6 function-calling reasoning adapter over the same validated
-window-tool layer for flexible, out-of-grammar commands. It is disabled by
-default for predictable offline local behavior and can be enabled only with an
-OpenAI API key and a valid configured model.
+The project deliberately keeps the fast, physical part of MITSU local. Moving a
+window with your hand does not wait for the internet, and webcam frames stay on
+your computer. That is why the core experience remains responsive even if a
+network connection is unavailable.
+
+GPT-5.6 is MITSU's optional flexible-language layer. The reliable everyday
+commands, such as `show Discord on the left screen`, use a small fixed grammar
+so they behave predictably. For a request that does not fit that grammar,
+GPT-5.6 can reason over the same carefully limited actions MITSU already uses:
+find a window, restore it, move it, or read the screen when explicitly allowed.
+It is disabled by default, protected by a circuit breaker, and requires the
+user's own OpenAI API key and a valid configured model.
+
+Behind the scenes, Codex accelerated test-first development, Windows API
+integration, MediaPipe hand tracking, coordinate math, gesture-state-machine
+coverage, and the final safety and observability pass. The key product decisions
+remained intentional: local perception and movement, whole-window control over
+fragile tab-level control, and a deterministic voice grammar before any cloud
+reasoning fallback.
 
 ## License
 
