@@ -1,8 +1,7 @@
 import { Reveal } from '../hooks/useScrollReveal.jsx'
 import YouTubePlaceholder from './shared/YouTubePlaceholder'
 
-/* Set this to the YouTube video ID once the demo is uploaded. */
-const DEMO_VIDEO_ID = ''
+const DEMO_VIDEO_ID = 'l7jBbqcaIGA'
 
 const CONTROLS = [
   {

@@ -352,65 +352,7 @@ export default function Hero() {
 
       </div>
 
-      {/* App screenshot strip below fold */}
-      <div style={{
-        position:'relative', zIndex:2,
-        width:'100%', maxWidth:1100,
-        margin:'0 auto',
-        padding:'0 32px 80px',
-      }}>
-        {/* Floating chips */}
-        <div className="chip-f1" style={{
-          position:'absolute', top:32, right:16, zIndex:10,
-          display:'flex', alignItems:'center', gap:6,
-          border:'1px solid rgba(163,163,163,0.24)', borderRadius:12,
-          padding:'8px 14px', fontSize:'0.82rem', fontWeight:700,
-          color:'rgba(244,244,245,0.95)',
-          background:'rgba(39,39,42,0.72)', backdropFilter:'blur(12px)',
-        }}>
-          <span style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e' }} />
-          On-device tracking
-        </div>
-        <div className="chip-f2" style={{
-          position:'absolute', top:100, left:0, zIndex:10,
-          display:'flex', alignItems:'center', gap:6,
-          border:'1px solid rgba(163,163,163,0.24)', borderRadius:12,
-          padding:'8px 14px', fontSize:'0.82rem', fontWeight:700,
-          color:'rgba(244,244,245,0.95)',
-          background:'rgba(39,39,42,0.72)', backdropFilter:'blur(12px)',
-        }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="#c084fc" aria-hidden="true">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 3.2a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6zm0 13.6c-1.9 0-3.6-.97-4.6-2.44.02-1.53 3.07-2.37 4.6-2.37s4.58.84 4.6 2.37A5.49 5.49 0 0 1 12 18.8z"/>
-          </svg>
-          GPT-5.6 tool calling
-        </div>
-        <div className="chip-f3" style={{
-          position:'absolute', bottom:120, right:0, zIndex:10,
-          display:'flex', alignItems:'center', gap:6,
-          border:'1px solid rgba(163,163,163,0.24)', borderRadius:12,
-          padding:'8px 14px', fontSize:'0.82rem', fontWeight:700,
-          color:'rgba(244,244,245,0.95)',
-          background:'rgba(39,39,42,0.72)', backdropFilter:'blur(12px)',
-        }}>
-          <span style={{ width:6, height:6, borderRadius:'50%', background:'#fbbf24' }} />
-          Kill switch armed
-        </div>
 
-        <div style={{
-          position:'relative',
-          borderRadius:20,
-          overflow:'hidden',
-          border:'1px solid rgba(255,255,255,0.09)',
-          boxShadow:'0 0 80px rgba(255,255,255,0.04), 0 40px 100px rgba(0,0,0,0.6)',
-        }}>
-          <ImagePlaceholder
-            src="/screenshots/heroimage.png"
-            label="MITSU debug overlay — live hand landmarks, gesture state, pointer coordinates"
-            alt="MITSU debug overlay showing live hand landmarks, gesture state, and physical-pixel pointer coordinates"
-            aspect="16/9"
-          />
-        </div>
-      </div>
 
       {/* Scroll cue */}
       <div style={{

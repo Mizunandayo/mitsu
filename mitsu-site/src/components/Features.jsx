@@ -116,11 +116,7 @@ export default function Features() {
                 <span className="code-cm">{'# crossing monitors is not a special case'}</span>
               </div>
 
-              <ImagePlaceholder
-                src="/screenshots/crossdrag.png"
-                label="Window mid-glide between the laptop and external display"
-                alt="A window mid-glide between the laptop display and the external monitor"
-              />
+
             </div>
           </Reveal>
 
@@ -159,11 +155,7 @@ export default function Features() {
                 ))}
               </div>
 
-              <ImagePlaceholder
-                src="/screenshots/shelf.png"
-                label="V-sign shelf — minimized windows brought back into reach"
-                alt="The V-sign shelf listing minimized windows ready to be selected"
-              />
+
             </div>
           </Reveal>
         </div>
@@ -184,34 +176,7 @@ export default function Features() {
           ))}
         </div>
 
-        {/* Row 3: Window state + Mic picker */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {[
-            {
-              tag: 'Window state',
-              title: 'Minimized is not a special case',
-              sub: 'A minimized window still has a handle. MITSU restores before moving, so show and move behave identically no matter where the window started.',
-              src: '/screenshots/overlay.png',
-              alt: 'Debug overlay showing gesture state and window handle resolution',
-            },
-            {
-              tag: 'Input devices',
-              title: 'Pick your microphone, mid-run',
-              sub: 'A native Qt selector lists every input device. Choosing one swaps the active mic in memory for the current session, without restarting the loop.',
-              src: '/screenshots/micpicker.png',
-              alt: 'Native microphone selector listing available input devices',
-            },
-          ].map((c, i) => (
-            <Reveal key={c.tag} delay={i + 1}>
-              <div className="glass-panel rounded-2xl p-7 hover:border-zinc-300/45 transition-all duration-300 h-full">
-                <span className="text-[0.82rem] font-bold tracking-[0.10em] uppercase text-zinc-300/85 mb-2 block">{c.tag}</span>
-                <div className="text-[0.96rem] font-bold text-white mb-2">{c.title}</div>
-                <div className="small-copy text-zinc-100/85 mb-5">{c.sub}</div>
-                <ImagePlaceholder src={c.src} label={c.title} alt={c.alt} />
-              </div>
-            </Reveal>
-          ))}
-        </div>
+   
 
       </div>
     </section>

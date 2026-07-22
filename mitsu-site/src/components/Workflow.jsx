@@ -146,14 +146,7 @@ export default function Workflow() {
           </div>
         </Reveal>
 
-        {/* Workflow screenshot */}
-        <Reveal delay={5}>
-          <ImagePlaceholder
-            src="/screenshots/workflow.png"
-            label="Full loop — camera overlay, gesture state readout, and the window mid-glide"
-            alt="MITSU running: camera overlay with landmarks, gesture state readout, and a window mid-glide between monitors"
-          />
-        </Reveal>
+
 
       </div>
     </section>

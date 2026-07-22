@@ -214,14 +214,7 @@ export default function OpenAISection() {
           </div>
         </Reveal>
 
-        {/* Voice screenshot */}
-        <Reveal delay={4}>
-          <ImagePlaceholder
-            src="/screenshots/voicecommand.png"
-            label="Voice command — push-to-talk capture, transcript, and the parsed action / target / destination"
-            alt="MITSU voice command panel showing push-to-talk capture, transcript, and parsed action, target, and destination"
-          />
-        </Reveal>
+
 
       </div>
     </section>
