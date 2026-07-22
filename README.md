@@ -67,7 +67,7 @@ SHA-256 pin is verified before Mitsu loads it.
 
 ```powershell
 .venv\Scripts\python.exe scripts\bootstrap_hand_model.py --trust-on-first-use
-.venv\Scripts\python.exe -m Mitsu.app
+.venv\Scripts\python.exe -m mitsu.app
 ```
 
 The application starts a `Mitsu Debug` camera window. `Q` or `Esc` exits safely.
