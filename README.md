@@ -1,8 +1,8 @@
-# MITSU (見つ)
+# Mitsu (見つ)
 
 **Point at nothing, say a name, and your windows move.**
 
-MITSU is a Windows-first, hand-and-voice window manager for multi-monitor
+Mitsu is a Windows-first, hand-and-voice window manager for multi-monitor
 desktops. It treats windows as physical objects: grip a window with a hand
 gesture and move it across the virtual desktop, or use a short spoken command
 to restore and relocate an app.
@@ -63,14 +63,14 @@ For voice, set `OPENAI_API_KEY` in `.env`. Leave it empty for a fully local
 gesture-only run. Never commit `.env`.
 
 Download the MediaPipe model once. The model is ignored by Git; the committed
-SHA-256 pin is verified before MITSU loads it.
+SHA-256 pin is verified before Mitsu loads it.
 
 ```powershell
 .venv\Scripts\python.exe scripts\bootstrap_hand_model.py --trust-on-first-use
-.venv\Scripts\python.exe -m mitsu.app
+.venv\Scripts\python.exe -m Mitsu.app
 ```
 
-The application starts a `MITSU Debug` camera window. `Q` or `Esc` exits safely.
+The application starts a `Mitsu Debug` camera window. `Q` or `Esc` exits safely.
 
 ## Controls
 
@@ -84,7 +84,7 @@ The application starts a `MITSU Debug` camera window. `Q` or `Esc` exits safely.
 | Back / Forward | Pointer pose plus raised pinky / raised ring finger |
 | Minimize | Index-middle-ring pose followed by a downward stroke |
 | Window shelf | Hold a V sign, then point at a minimized-window row and click |
-| Voice | Press `V` to start, speak, then press `V` again to send. Example: `Please show MITSU Messages on the upper monitor.` |
+| Voice | Press `V` to start, speak, then press `V` again to send. Example: `Please show Mitsu Messages on the upper monitor.` |
 | Choose microphone | Press `M`, choose an input device, then select **Use microphone** |
 | Emergency stop | `Ctrl` + `Alt` + `Shift` + `M` |
 
@@ -100,7 +100,7 @@ Can you show Discord on my screen
 
 ## Configuration
 
-Runtime settings are in [config/default.toml](config/default.toml). MITSU
+Runtime settings are in [config/default.toml](config/default.toml). Mitsu
 validates them with Pydantic at startup and fails closed on unknown keys. The
 microphone selector changes the active input only in memory for the current run.
 
@@ -115,7 +115,7 @@ microphone selector changes the active input only in memory for the current run.
 ## Safety And Privacy
 
 - Per-monitor DPI awareness is enabled before Win32 window calls.
-- Only eligible top-level app windows are acted on; MITSU skips shell, system,
+- Only eligible top-level app windows are acted on; Mitsu skips shell, system,
   and self windows and never injects arbitrary code into other processes.
 - Movement uses `SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE` where applicable.
 - The model downloader uses HTTPS, a size limit, and SHA-256 verification.
@@ -125,21 +125,21 @@ microphone selector changes the active input only in memory for the current run.
 
 ## Built With Codex And GPT-5.6
 
-MITSU was built in Codex during OpenAI Build Week. In everyday terms, Codex was
+Mitsu was built in Codex during OpenAI Build Week. In everyday terms, Codex was
 the build partner that helped turn a webcam, a hand gesture, and a Windows
 desktop into a reliable interaction: it helped design the gesture rules, connect
 them safely to real windows, and test the awkward cases before a gesture could
 move the wrong thing.
 
-The project deliberately keeps the fast, physical part of MITSU local. Moving a
+The project deliberately keeps the fast, physical part of Mitsu local. Moving a
 window with your hand does not wait for the internet, and webcam frames stay on
 your computer. That is why the core experience remains responsive even if a
 network connection is unavailable.
 
-GPT-5.6 is MITSU's optional flexible-language layer. The reliable everyday
+GPT-5.6 is Mitsu's optional flexible-language layer. The reliable everyday
 commands, such as `show Discord on the left screen`, use a small fixed grammar
 so they behave predictably. For a request that does not fit that grammar,
-GPT-5.6 can reason over the same carefully limited actions MITSU already uses:
+GPT-5.6 can reason over the same carefully limited actions Mitsu already uses:
 find a window, restore it, move it, or read the screen when explicitly allowed.
 It is disabled by default, protected by a circuit breaker, and requires the
 user's own OpenAI API key and a valid configured model.
